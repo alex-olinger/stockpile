@@ -1,7 +1,12 @@
-"""Workflow orchestration — sequential pipeline from pricing display through packaging.
+"""Main menu + Image/Video mode orchestration.
 
-Accepts --dry-run flag via argparse. Sequential workflow calling each module.
-Uses input() for all user prompts. Handles KeyboardInterrupt for clean exit.
+Two separate modes selectable from a main menu:
+- Image Mode (I1-I6): scene setup through image packaging
+- Video Mode (V1-V5): scene selection through video packaging
+
+Uses input() for all user prompts. Handles KeyboardInterrupt:
+- During a mode → return to main menu
+- At main menu → exit program
 Passes dry_run boolean to all module functions that make API calls.
 """
 
@@ -30,21 +35,42 @@ def parse_args() -> argparse.Namespace:
     pass
 
 
-def main() -> None:
-    """Run the full content pipeline.
+def select_week() -> Path:
+    """Prompt for week number, create/verify week dirs, return week path."""
+    pass
 
-    Steps:
-        0. Display pricing table
-        1. Week selection — prompt for week number, create week dirs
-        2. Scene setup — theme, location, image/variation counts, generate slug
-        3. Prompt generation — load past prompts, call Claude, save .txt files
-        4. Image generation — generate images from prompts
-        5. Image review — open explorer, approve/reject, handle regeneration
-        6. Metadata generation — Claude vision on approved images
-        7. Metadata review — display and allow inline edits
-        8. Video prompt generation — Claude vision for video prompts
-        9. Video generation — Kling via fal.ai
-       10. Video review — approve/reject videos
-       11. Package approved content to outputs/
+
+def run_image_mode(week_path: Path, dry_run: bool) -> None:
+    """Image generation pipeline (Steps I1-I6).
+
+    I1: Scene setup (theme, location, counts, slug, dirs)
+    I2: Prompt generation
+    I3: Image generation
+    I4: Image review
+    I5: Metadata generation
+    I6: Metadata review + packaging
+    """
+    pass
+
+
+def run_video_mode(week_path: Path, dry_run: bool) -> None:
+    """Video generation pipeline (Steps V1-V5).
+
+    V1: Scene selection (list existing image scenes)
+    V2: Video prompt generation
+    V3: Video generation
+    V4: Video review
+    V5: Packaging
+    """
+    pass
+
+
+def main() -> None:
+    """Main menu loop.
+
+    Startup: parse args, load env, display pricing.
+    Menu: [W]eek select, [I]mage mode, [V]ideo mode, [Q]uit.
+    KeyboardInterrupt during mode → return to menu.
+    KeyboardInterrupt at menu → exit.
     """
     pass
