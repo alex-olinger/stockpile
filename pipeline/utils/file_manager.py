@@ -1,6 +1,10 @@
 """File management — directory creation, naming conventions, file operations."""
 
+import datetime
+import shutil
 from pathlib import Path
+
+from pipeline.config import IMAGE_DIR, VIDEO_DIR
 
 
 def create_week_dirs(week_num: int, year: int) -> tuple[Path, Path]:
@@ -19,7 +23,19 @@ def create_week_dirs(week_num: int, year: int) -> tuple[Path, Path]:
     Raises:
         FileExistsError: If the week directory already exists.
     """
-    pass
+    monday = datetime.date.fromisocalendar(year, week_num, 1)
+    folder_name = f"week{week_num:02d}_{monday.strftime('%Y%m%d')}"
+
+    image_week = IMAGE_DIR / folder_name
+    video_week = VIDEO_DIR / folder_name
+
+    if image_week.exists() or video_week.exists():
+        raise FileExistsError(f"Week directory already exists: {folder_name}")
+
+    image_week.mkdir(parents=True, exist_ok=True)
+    video_week.mkdir(parents=True, exist_ok=True)
+
+    return image_week, video_week
 
 
 def create_scene_dirs(week_path: Path, scene_slug: str) -> Path:
@@ -32,7 +48,10 @@ def create_scene_dirs(week_path: Path, scene_slug: str) -> Path:
     Returns:
         Path to the created scene directory.
     """
-    pass
+    scene_dir = week_path / scene_slug
+    for subdir in ["base", "variations", "exports"]:
+        (scene_dir / subdir).mkdir(parents=True, exist_ok=True)
+    return scene_dir
 
 
 def move_to_rejected(
@@ -49,4 +68,8 @@ def move_to_rejected(
     Returns:
         Path to the file in its new rejected location.
     """
-    pass
+    target_dir = rejected_base / week_folder / scene_slug
+    target_dir.mkdir(parents=True, exist_ok=True)
+    dest = target_dir / file_path.name
+    shutil.move(str(file_path), str(dest))
+    return dest

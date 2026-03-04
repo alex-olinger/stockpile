@@ -1,6 +1,10 @@
 """Metadata generation — create metadata JSON and video prompts via Claude vision."""
 
+import json
+import shutil
 from pathlib import Path
+
+from pipeline.api.claude_api import generate_metadata_from_image, generate_video_prompt_from_image
 
 
 def create_metadata(
@@ -18,7 +22,7 @@ def create_metadata(
         Metadata dict with keys: title, description, keywords (25-50),
         category, editorial, ai_generated.
     """
-    pass
+    return generate_metadata_from_image(image_path, prompt, theme, dry_run=dry_run)
 
 
 def create_video_prompts(
@@ -33,7 +37,10 @@ def create_video_prompts(
     Returns:
         Dict mapping the same keys to video prompt strings.
     """
-    pass
+    video_prompts = {}
+    for key, image_path in image_paths.items():
+        video_prompts[key] = generate_video_prompt_from_image(image_path, dry_run=dry_run)
+    return video_prompts
 
 
 def save_metadata(metadata: dict, path: Path) -> Path:
@@ -46,7 +53,10 @@ def save_metadata(metadata: dict, path: Path) -> Path:
     Returns:
         Path to the saved JSON file.
     """
-    pass
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(metadata, f, indent=2)
+    return path
 
 
 def copy_metadata_to_video(src_path: Path, video_dir: Path) -> Path:
@@ -59,4 +69,7 @@ def copy_metadata_to_video(src_path: Path, video_dir: Path) -> Path:
     Returns:
         Path to the copied metadata file.
     """
-    pass
+    video_dir.mkdir(parents=True, exist_ok=True)
+    dest = video_dir / src_path.name
+    shutil.copy2(str(src_path), str(dest))
+    return dest

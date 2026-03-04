@@ -41,7 +41,22 @@ class GeminiProvider(ImageProvider):
         Returns:
             Path to the saved image.
         """
-        pass
+        from google import genai
+        from pipeline.config import GOOGLE_API_KEY
+
+        client = genai.Client(api_key=GOOGLE_API_KEY)
+        response = client.models.generate_images(
+            model="imagen-3.0-generate-002",
+            prompt=prompt,
+            config=genai.types.GenerateImagesConfig(
+                number_of_images=1,
+                aspect_ratio="16:9",
+            ),
+        )
+        image_bytes = response.generated_images[0].image.image_bytes
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_bytes(image_bytes)
+        return output_path
 
 
 class PlaceholderProvider(ImageProvider):
@@ -60,7 +75,18 @@ class PlaceholderProvider(ImageProvider):
         Returns:
             Path to the saved placeholder image.
         """
-        pass
+        from PIL import Image, ImageDraw
+
+        img = Image.new("RGB", (1920, 1080), color=(70, 130, 180))
+        draw = ImageDraw.Draw(img)
+        # Wrap long prompts to fit
+        max_chars = 60
+        lines = [prompt[i:i + max_chars] for i in range(0, len(prompt), max_chars)]
+        text = "\n".join(lines[:10])
+        draw.text((40, 40), f"[PLACEHOLDER]\n\n{text}", fill=(255, 255, 255))
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        img.save(output_path, "PNG")
+        return output_path
 
 
 def get_image_provider(provider_name: str = "gemini", dry_run: bool = False) -> ImageProvider:
@@ -73,4 +99,8 @@ def get_image_provider(provider_name: str = "gemini", dry_run: bool = False) -> 
     Returns:
         An ImageProvider instance ready to generate images.
     """
-    pass
+    if dry_run:
+        return PlaceholderProvider()
+    if provider_name == "gemini":
+        return GeminiProvider()
+    raise ValueError(f"Unknown image provider: {provider_name}")
