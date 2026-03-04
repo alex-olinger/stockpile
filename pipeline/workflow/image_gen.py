@@ -2,6 +2,9 @@
 
 from pathlib import Path
 
+from pipeline.api.image_api import get_image_provider
+from pipeline.config import PRICING
+
 
 def generate_scene_images(
     prompts: dict[str, str],
@@ -11,12 +14,8 @@ def generate_scene_images(
 ) -> dict[str, Path]:
     """Orchestrate image generation for a complete scene (base + variations).
 
-    Reads prompts, calls the configured image provider for each, saves images
-    with correct naming ({slug}-base.png, {slug}-var1.png, etc.), and prints
-    a cost summary.
-
     Args:
-        prompts: Dict with 'base' and 'var1', 'var2', ... keys → prompt strings.
+        prompts: Dict with 'base' and 'var1', 'var2', ... keys -> prompt strings.
         scene_image_dir: Path to the scene's image directory.
         scene_slug: Scene slug for file naming.
         dry_run: If True, uses PlaceholderProvider.
@@ -24,4 +23,21 @@ def generate_scene_images(
     Returns:
         Dict mapping prompt keys to saved image file paths.
     """
-    pass
+    provider = get_image_provider(dry_run=dry_run)
+    image_paths = {}
+
+    for key, prompt in prompts.items():
+        if key == "base":
+            output_path = scene_image_dir / "base" / f"{scene_slug}-base.png"
+        else:
+            output_path = scene_image_dir / "variations" / f"{scene_slug}-{key}.png"
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        provider.generate(prompt, output_path)
+        image_paths[key] = output_path
+        print(f"  Generated {key}: {output_path.name}")
+
+    cost = PRICING["image"]["gemini"]["cost_per_image"] * len(prompts)
+    print(f"\nImage cost: ${cost:.3f} ({len(prompts)} images x ${PRICING['image']['gemini']['cost_per_image']:.3f})")
+
+    return image_paths

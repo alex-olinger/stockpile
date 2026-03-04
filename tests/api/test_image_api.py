@@ -28,10 +28,14 @@ def test_placeholder_provider_is_image_provider():
 def test_get_image_provider_dry_run_returns_placeholder():
     """Factory with dry_run=True should always return PlaceholderProvider."""
     provider = get_image_provider(dry_run=True)
-    # Stub: will verify isinstance(provider, PlaceholderProvider)
-    pytest.skip("Stub — implementation pending")
+    assert isinstance(provider, PlaceholderProvider)
 
 
 def test_placeholder_provider_creates_file(tmp_path):
     """PlaceholderProvider.generate should create a PNG file at output_path."""
-    pytest.skip("Stub — implementation pending")
+    provider = PlaceholderProvider()
+    output = tmp_path / "test-image.png"
+    result = provider.generate("A test prompt for placeholder", output)
+    assert result == output
+    assert output.exists()
+    assert output.stat().st_size > 0

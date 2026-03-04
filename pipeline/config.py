@@ -4,7 +4,10 @@ Loads .env via python-dotenv. Exposes API key constants, pricing dict,
 and directory path constants for the project.
 """
 
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 # --- Path constants ---
 
@@ -26,7 +29,11 @@ REJECTED_DIR: Path = BASE_DIR / "rejected"
 
 def load_env() -> None:
     """Load environment variables from .env file using python-dotenv."""
-    pass
+    global ANTHROPIC_API_KEY, GOOGLE_API_KEY, FAL_KEY
+    load_dotenv()
+    ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    FAL_KEY = os.getenv("FAL_KEY")
 
 
 def get_api_key(name: str) -> str | None:
@@ -35,7 +42,7 @@ def get_api_key(name: str) -> str | None:
     Args:
         name: Environment variable name (e.g. 'ANTHROPIC_API_KEY').
     """
-    pass
+    return os.getenv(name)
 
 
 # --- API key constants (populated after load_env) ---

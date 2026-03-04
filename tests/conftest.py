@@ -2,6 +2,7 @@
 
 import pytest
 from pathlib import Path
+from unittest.mock import MagicMock
 
 
 @pytest.fixture
@@ -31,12 +32,18 @@ def mock_env(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture
-def mock_claude_client(monkeypatch: pytest.MonkeyPatch) -> None:
+def mock_claude_client(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
     """Patch anthropic.Anthropic to return canned responses.
 
     Stubs the Claude API client so tests don't make real API calls.
     """
-    pass
+    mock_client = MagicMock()
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(text='{"title": "Test", "description": "Test desc", "keywords": ["test"], "category": "test", "editorial": false, "ai_generated": true}')]
+    mock_client.return_value.messages.create.return_value = mock_response
+
+    monkeypatch.setattr("anthropic.Anthropic", mock_client)
+    return mock_client
 
 
 @pytest.fixture

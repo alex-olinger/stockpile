@@ -45,7 +45,28 @@ class KlingProvider(VideoProvider):
         Returns:
             Path to the saved video.
         """
-        pass
+        import base64
+        import fal_client
+        import requests
+
+        image_b64 = base64.b64encode(image_path.read_bytes()).decode()
+        image_url = f"data:image/png;base64,{image_b64}"
+
+        result = fal_client.subscribe(
+            "fal-ai/kling-video/v1/standard/image-to-video",
+            arguments={
+                "image_url": image_url,
+                "prompt": prompt,
+                "duration": "10",
+                "aspect_ratio": "16:9",
+            },
+        )
+        video_url = result["video"]["url"]
+        resp = requests.get(video_url)
+        resp.raise_for_status()
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_bytes(resp.content)
+        return output_path
 
 
 class PlaceholderVideoProvider(VideoProvider):
@@ -62,7 +83,8 @@ class PlaceholderVideoProvider(VideoProvider):
         Returns:
             The output_path (no file is actually created).
         """
-        pass
+        print(f"[DRY-RUN] Would generate video from {image_path.name}: {prompt[:80]}")
+        return output_path
 
 
 def get_video_provider(provider_name: str = "kling", dry_run: bool = False) -> VideoProvider:
@@ -75,4 +97,8 @@ def get_video_provider(provider_name: str = "kling", dry_run: bool = False) -> V
     Returns:
         A VideoProvider instance ready to generate videos.
     """
-    pass
+    if dry_run:
+        return PlaceholderVideoProvider()
+    if provider_name == "kling":
+        return KlingProvider()
+    raise ValueError(f"Unknown video provider: {provider_name}")
